@@ -27,6 +27,16 @@ function get_mm_values(node) {
     return values;
 }
 
+function json_format(json) {
+    let sb_depth = 0; // square brackets depth
+    json = json.split('').map((c) => {
+	if (c=='[') sb_depth++;
+	if (c==']') sb_depth--;
+	return (sb_depth > 1)? c.replace(/\s/g, ''): c;
+    }).join('');
+    return json.replaceAll(/,([^,]+)/g, ', $1');
+}
+
 function main() {
     const jsonObject = {};
     const text = fs.readFileSync("diagram.html", {encoding: 'utf-8'});
@@ -67,13 +77,7 @@ function main() {
 			     saturday: timeTable_saturday,
 			     sunday: timeTable_sunday };
     let json = JSON.stringify(jsonObject, null, 2);
-    let sb_depth = 0; // square brackets depth
-    json = json.split('').map((c) => {
-	if (c=='[') sb_depth++;
-	if (c==']') sb_depth--;
-	return (sb_depth > 1)? c.replace(/\s/g, ''): c;
-    }).join('');
-    json = json.replaceAll(/,([^,]+)/g, ', $1');
+    json = json_format(json);
     console.log(json);
 }
 
