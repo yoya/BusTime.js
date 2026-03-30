@@ -2,9 +2,17 @@ var HTMLParser = require('node-html-parser');
 
 // こちらのサイトを取り込むスクリプト
 // https://transfer.navitime.biz/sotetsu/pc/map/Top
+// 綾瀬車庫 綾41	 ＜小園団地経由＞ 海老名駅ゆき
+// https://transfer.navitime.biz/sotetsu/pc/diagram/BusDiagram?orvCode=00140277&course=0003400148&stopNo=9&date=2026-04-01
 
-// 綾瀬車庫 綾41	 ＜小園団地経由＞ 海老名駅ゆき 
-const url = 'https://transfer.navitime.biz/sotetsu/pc/diagram/BusDiagram?orvCode=00140277&course=0003400148&stopNo=9&date=2026-03-27'
+if (process.argv.length != 3) {
+    console.error("Usage: node import.js <url>");
+    return 0;
+}
+
+const url = process.argv[2];
+// console.info({url});
+// const url = 'https://transfer.navitime.biz/sotetsu/pc/diagram/BusDiagram?orvCode=00140277&course=0003400148&stopNo=9&date=2026-03-27'
 
 const fs = require('fs');
 
@@ -14,7 +22,7 @@ main();
 function get_first_word(node) {
     const text = node.textContent.trim();
     const word = text.substr(0, text.indexOf('\n'));
-    return word;
+    return word? word: text;
 }
     
 function get_mm_values(node) {
@@ -37,10 +45,10 @@ function json_format(json) {
     return json.replaceAll(/,([^,]+)/g, ', $1');
 }
 
-function main() {
+async function main() {
     const jsonObject = {};
-    const text = fs.readFileSync("diagram.html", {encoding: 'utf-8'});
-    // const text = await (await fetch(url)).text();
+    // const text = fs.readFileSync("diagram.html", {encoding: 'utf-8'});
+    const text = await (await fetch(url)).text();
     const root =  HTMLParser.parse(text);
     const area = root.querySelector("#subject-area");
     const area_name = get_first_word(area);
@@ -48,10 +56,13 @@ function main() {
     const course_name = get_first_word(course);
     const destination = root.querySelector(".td-destination");
     const destination_name = get_first_word(destination);
+    const revision_date = root.querySelector("#revision-date");
+    const revision_date_text = get_first_word(revision_date);
     // console.log({area_name, course_name, destination_name});
     jsonObject.area = area_name;
     jsonObject.course = course_name;
     jsonObject.destination = destination_name;
+    jsonObject.revision_date = revision_date_text;
     //
     const timeTable_weekday = [];
     const timeTable_saturday = [];
